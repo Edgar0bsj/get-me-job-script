@@ -2,16 +2,19 @@ async function rioVagas(page, url)
 {
     const titles = [];
     const dates = [];
-    const links = [];
     const _pags = [];
 
-    // titles
+    // titles of hrefs
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     for (let i = 2; i <= 10 ; i++)
         {
             await page.waitForSelector("header > h2 > a"); 
             _pags[i] = await page.$$eval("header > h2 > a", spans =>
-            spans.map(span => span.textContent.trim())
+            spans.map((span) => 
+                {return {
+                title: span.textContent.trim(),
+                link: span.href
+            }})
             );
         
             titles.push(..._pags[i])
@@ -35,28 +38,12 @@ async function rioVagas(page, url)
             await page.goto(url+`page/${i}/`, { waitUntil: 'domcontentloaded' });
         };
 
-    // Hrefs
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-    for (let i = 2; i <= 10 ; i++)
-        {
-            await page.waitForSelector("header > h2 > a"); 
-            _pags[i] = await page.$$eval("header > h2 > a", spans =>
-            spans.map(n => n.href)
-            );
-        
-            links.push(..._pags[i])
-
-            await page.waitForSelector(`nav > div.wp-pagenavi`); 
-            await page.goto(url+`page/${i}/`, { waitUntil: 'domcontentloaded' });
-        };
-
-
 
     // Joins the two arrays into one array of objects
     const jobs = titles.map((el, index) => ({
-        title: el,
+        title: el.title,
         date: dates[index],
-        link: links[index]
+        link: el.link
     }));
 
     return jobs;
